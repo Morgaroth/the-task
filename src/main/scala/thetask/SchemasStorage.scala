@@ -2,7 +2,9 @@ package thetask
 
 import zio.{IO, Ref, ZIO, ZLayer}
 
-case class SchemasStorageError(schemaId: SchemaId, detail: Throwable)
+trait SchemasStorageError
+
+case class SchemaAlreadyExists(schemaId: SchemaId) extends SchemasStorageError
 
 trait SchemasStorage {
   def get(schemaId: SchemaId): IO[SchemasStorageError, Option[JsonSchema]]
@@ -29,6 +31,9 @@ class InMemSchemasStorage(
   }
 
   override def store(value: JsonSchema): IO[SchemasStorageError, Unit] = {
-    ref.update(_.updated(value.id, value)).unit
+    ref.updateZIO { underlying =>
+      if (underlying.contains(value.id)) ZIO.fail(SchemaAlreadyExists(value.id))
+      else ZIO.succeed(underlying.updated(value.id, value))
+    }
   }
 }

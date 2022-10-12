@@ -4,7 +4,7 @@ import io.circe.Printer
 import io.circe.syntax._
 import zhttp.http.{HttpData, Method, Request, URL}
 import zio.test.Assertion._
-import zio.test.{assert, _}
+import zio.test._
 
 object SchemaUploadE2ETest extends ZIOSpecDefault {
 
@@ -76,6 +76,19 @@ object SchemaUploadE2ETest extends ZIOSpecDefault {
           "action" -> "getSchema",
           "status" -> "error",
           "message" -> "Schema 'non-existing-schema' not found in the storage")))
+    }.provide(SchemasStorage.inMem),
+    test("should return sensible response on overriding") {
+      for {
+        res1 <- validPostRequest.flatMap(Boot.api)
+        res2 <- validPostRequest.flatMap(Boot.api)
+        parsed <- Utils.extractJsonMap(res2)
+      } yield assert(res1.status.code)(equalTo(201)) &&
+        assert(res2.status.code)(equalTo(400)) &&
+        assert(parsed)(equalTo(Map(
+          "id" -> "test-schema",
+          "action" -> "uploadSchema",
+          "status" -> "error",
+          "message" -> "Schema 'test-schema' already exists")))
     }.provide(SchemasStorage.inMem)
   )
 }

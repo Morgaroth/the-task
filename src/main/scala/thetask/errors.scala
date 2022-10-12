@@ -13,9 +13,11 @@ case class SchemaNotFound(schemaId: SchemaId) extends ThisTaskErrorDomain {
 }
 
 case class StorageError(schemaId: SchemaId, error: SchemasStorageError) extends ThisTaskErrorDomain {
-  // in normal world the underlying error should be matched and various responses generated regarding it
   override def toHttpError(action: Action) =
-    InternalServerError(schemaId, action, Status.Error, s"An internal error happened $error")
+    error match {
+      case SchemaAlreadyExists(_) => BadRequestError(schemaId, action, Status.Error, s"Schema '${schemaId.value}' already exists")
+      case error => InternalServerError(schemaId, action, Status.Error, s"An internal error happened $error")
+    }
 }
 
 case class InvalidJsonError(schemaId: SchemaId, p: ParsingFailure, detail: String) extends ThisTaskErrorDomain {
