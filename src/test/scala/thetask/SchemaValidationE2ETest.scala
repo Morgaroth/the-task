@@ -31,7 +31,7 @@ object SchemaValidationE2ETest extends ZIOSpecDefault {
       } yield assert(res.status.code)(equalTo(200)) &&
         assert(parsed)(equalTo(Map(
           "id" -> "config-schema",
-          "action" -> "validateSchema",
+          "action" -> "validateDocument",
           "status" -> "success"
         )))
     }.provide(prefilledStorage),
@@ -43,7 +43,7 @@ object SchemaValidationE2ETest extends ZIOSpecDefault {
       } yield assert(res.status.code)(equalTo(400)) &&
         assert(parsed)(equalTo(Map(
           "id" -> "config-schema",
-          "action" -> "validateSchema",
+          "action" -> "validateDocument",
           "status" -> "error",
           "message" -> "Provided json for input json cannot be parsed: io.circe.ParsingFailure: exhausted input")))
     }.provide(prefilledStorage),
@@ -55,7 +55,7 @@ object SchemaValidationE2ETest extends ZIOSpecDefault {
       } yield assert(res.status.code)(equalTo(400)) &&
         assert(parsed)(equalTo(Map(
           "id" -> "config-schema",
-          "action" -> "validateSchema",
+          "action" -> "validateDocument",
           "status" -> "error",
           "message" -> "Validation failed: #: 2 schema violations found, #: required key [destination] not found, #/chunks/size: expected type: Integer, found: String")))
     }.provide(prefilledStorage),
@@ -67,7 +67,7 @@ object SchemaValidationE2ETest extends ZIOSpecDefault {
       } yield assert(res.status.code)(equalTo(404)) &&
         assert(parsed)(equalTo(Map(
           "id" -> "another-schema",
-          "action" -> "validateSchema",
+          "action" -> "validateDocument",
           "status" -> "error",
           "message" -> "Schema 'another-schema' not found in the storage")))
     }.provide(prefilledStorage),

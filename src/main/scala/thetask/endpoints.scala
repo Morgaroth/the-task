@@ -81,9 +81,9 @@ object Action {
 
   case object UploadSchema extends Action("uploadSchema")
 
-  case object ValidateSchema extends Action("validateSchema")
+  case object ValidateDocument extends Action("validateDocument")
 
-  val allValues = Vector(GetSchema, UploadSchema, ValidateSchema).map(x => x.name.toLowerCase -> x).toMap
+  val allValues = Vector(GetSchema, UploadSchema, ValidateDocument).map(x => x.name.toLowerCase -> x).toMap
   implicit val circeEncoder: Encoder[Action] = Encoder.encodeString.contramap[Action](_.name)
   implicit val circeDecoder: Decoder[Action] = Decoder.decodeString.emap(name => allValues.get(name.toLowerCase).toRight(s"value $name unknown for Action class"))
   implicit val tapirSchema: Schema[Action] = Schema.string

@@ -34,8 +34,8 @@ object Boot extends zio.ZIOAppDefault {
       .jsonValidate
       .zServerLogic { case (schemaId, jsonValue) =>
         ValidationService.validate(schemaId, jsonValue)
-          .as(GenericSuccess(schemaId, Action.ValidateSchema, Status.Success))
-          .mapError(_.toHttpError(Action.ValidateSchema))
+          .as(GenericSuccess(schemaId, Action.ValidateDocument, Status.Success))
+          .mapError(_.toHttpError(Action.ValidateDocument))
       }
 
   val serviceEndpoints: List[ZServerEndpoint[SchemasStorage, ZioStreams]] = List(
