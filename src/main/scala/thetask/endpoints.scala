@@ -7,6 +7,8 @@ import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 
+import scala.io.Source
+
 case class JsonSchema(
                        id: SchemaId,
                        value: String,
@@ -15,7 +17,7 @@ case class JsonSchema(
 case class SchemaId(value: String) extends AnyVal
 
 object SchemaId {
-  val pathParam = path[SchemaId].name("schemaId")
+  val pathParam = path[SchemaId].name("schemaId").example(SchemaId("config-schema"))
   implicit val tapirSchema: Schema[SchemaId] = Schema.string
   implicit val circeEncoder: Encoder[SchemaId] = Encoder.encodeString.contramap[SchemaId](_.value)
   implicit val circeDecoder: Decoder[SchemaId] = Decoder.decodeString.map(SchemaId.apply)
@@ -23,12 +25,11 @@ object SchemaId {
 
 object endpoints {
 
-
   val schemaRegister: Endpoint[Unit, JsonSchema, ThisTaskHttpError, GenericSuccess, Any] =
     endpoint
       .post
       .in("schema" / SchemaId.pathParam) // kinda not typical CRUD
-      .in(stringJsonBody)
+      .in(stringJsonBody.example(Source.fromResource("config-schema.json").mkString))
       .mapInTo[JsonSchema]
       .out(statusCode(StatusCode.Created).and(jsonBody[GenericSuccess]))
       .errorOut(
@@ -51,7 +52,7 @@ object endpoints {
     endpoint
       .post
       .in("validate" / SchemaId.pathParam)
-      .in(stringJsonBody)
+      .in(stringJsonBody.example(Source.fromResource("valid-json-test.json").mkString))
       .out(statusCode(StatusCode.Ok).and(jsonBody[GenericSuccess]))
       .errorOut(oneOf(
         oneOfVariant(StatusCode.BadRequest, jsonBody[BadRequestError]),
