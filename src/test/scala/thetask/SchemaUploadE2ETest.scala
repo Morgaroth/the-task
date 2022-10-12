@@ -1,42 +1,40 @@
 package thetask
 
+import io.circe.Printer
 import io.circe.syntax._
-import io.circe.{Printer, jawn}
-import sttp.client3.circe._
-import sttp.client3.{UriContext, basicRequest}
 import zhttp.http.{HttpData, Method, Request, URL}
-import zio.ZIO
 import zio.test.Assertion._
 import zio.test.{assert, _}
 
 object SchemaUploadE2ETest extends ZIOSpecDefault {
 
-  val validPostRequest = Request(
-    url = URL.fromString("http://example.com/schema/test-schema").getOrElse(???),
-    method = Method.POST,
-    data = HttpData.fromString(Printer.noSpaces.print(Map("some-field" -> "some-value").asJson))
-  ).withContentType("application/json")
 
-  val invalidJsonUpload = Request(
-    url = URL.fromString("http://example.com/schema/test-schema").getOrElse(???),
-    method = Method.POST,
-    data = HttpData.fromString("""{"key": "unclosedString}""")
-  ).withContentType("application/json")
+  def registerSchemaReq(schemaId: SchemaId, data: String) = {
+    URL.fromString(s"http://example.com/schema/${schemaId.value}").toIO.map { url =>
+      Request(
+        url = url,
+        method = Method.POST,
+        data = HttpData.fromString(data)
+      ).withContentType("application/json")
+    }
+  }
 
-  val validGetSchema = Request(
-    url = URL.fromString("http://example.com/schema/test-schema").getOrElse(???),
-    method = Method.GET,
-  )
+  def getSchemaReq(schemaId: SchemaId) = {
+    URL.fromString(s"http://example.com/schema/${schemaId.value}").toIO.map { url =>
+      Request(url = url)
+    }
+  }
 
-  val invalidGetSchema = Request(
-    url = URL.fromString("http://example.com/schema/non-existing-schema").getOrElse(???),
-    method = Method.GET,
-  )
+  val validPostRequest = registerSchemaReq(SchemaId("test-schema"), Printer.noSpaces.print(Map("some-field" -> "some-value").asJson))
+  val invalidJsonUpload = registerSchemaReq(SchemaId("test-schema"), """{"key": "unclosedString}""")
+
+  val validGetSchema = getSchemaReq(SchemaId("test-schema"))
+  val invalidGetSchema = getSchemaReq(SchemaId("non-existing-schema"))
 
   lazy val spec = suite("SchemaUploadE2ETest")(
     test("should accept correct upload") {
       for {
-        res <- Boot.api(validPostRequest)
+        res <- validPostRequest.flatMap(Boot.api)
         parsed <- Utils.extractJsonMap(res)
       } yield assert(res.status.code)(equalTo(201)) &&
         assert(parsed)(equalTo(Map(
@@ -47,7 +45,7 @@ object SchemaUploadE2ETest extends ZIOSpecDefault {
 
     test("should reject invalid json") {
       for {
-        res <- Boot.api(invalidJsonUpload)
+        res <- invalidJsonUpload.flatMap(Boot.api)
         parsed <- Utils.extractJsonMap(res)
       } yield assert(res.status.code)(equalTo(400)) &&
         assert(parsed)(equalTo(Map(
@@ -59,9 +57,9 @@ object SchemaUploadE2ETest extends ZIOSpecDefault {
 
     test("should provide already published schema") {
       for {
-        res <- Boot.api(validPostRequest)
+        res <- validPostRequest.flatMap(Boot.api)
         createRespCode = res.status.code
-        retrieve <- Boot.api(validGetSchema)
+        retrieve <- validGetSchema.flatMap(Boot.api)
         parsed <- Utils.extractJsonMap(retrieve)
       } yield assert(createRespCode)(equalTo(201)) &&
         assert(retrieve.status.code)(equalTo(200)) &&
@@ -70,7 +68,7 @@ object SchemaUploadE2ETest extends ZIOSpecDefault {
 
     test("should respond with meaning response for non existing schema") {
       for {
-        res <- Boot.api(invalidGetSchema)
+        res <- invalidGetSchema.flatMap(Boot.api)
         parsed <- Utils.extractJsonMap(res)
       } yield assert(res.status.code)(equalTo(404)) &&
         assert(parsed)(equalTo(Map(
