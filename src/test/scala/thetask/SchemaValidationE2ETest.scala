@@ -2,15 +2,15 @@ package thetask
 
 import zhttp.http.{HttpData, Method, Request, URL}
 import zio.test.Assertion._
-import zio.test.{assert, _}
+import zio.test._
 
 import scala.io.Source
 
 object SchemaValidationE2ETest extends ZIOSpecDefault {
 
   private val schemaId = SchemaId("config-schema")
-  val prefilledStorage = SchemasStorage.make(
-    Map(schemaId -> JsonSchema(schemaId, Source.fromResource("config-schema.json").mkString("")))
+  val prefilledStorage = SchemasStorage.makeInMem(
+    List(JsonSchema(schemaId, Source.fromResource("config-schema.json").mkString("")))
   )
 
   def validateReq(schemaId: SchemaId, resourceName: String) = {

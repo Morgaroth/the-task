@@ -6,6 +6,7 @@ Libs
 * zio - because I'm more familiar with ZIO syntax than with cats-effect's one.
 * circe 
 * circe-json-schema - maybe not the famous lib for schema validation, but compatible with circe, that helps
+* better-files - for nicer syntax for java's File
 
 Running
 ===

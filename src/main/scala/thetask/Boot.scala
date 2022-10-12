@@ -1,5 +1,6 @@
 package thetask
 
+import better.files.Dsl
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
@@ -9,7 +10,7 @@ import zio.Task
 
 object Boot extends zio.ZIOAppDefault {
 
-  val storage = SchemasStorage.inMem
+  val storage = SchemasStorage.makeFileBased(Dsl.cwd / "schemas-storage") // configurability out of scope
 
   val schemasRetrievalServerEndpoint: ZServerEndpoint[SchemasStorage, Any] =
     endpoints
