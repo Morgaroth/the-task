@@ -45,7 +45,7 @@ object Boot extends zio.ZIOAppDefault {
     jsonValidateServerEndpoint,
   )
 
-  val swaggerUIEndpoints = SwaggerInterpreter().fromEndpoints[Task](serviceEndpoints.map(_.endpoint), "Mateusz SnowPlow Task", "1.0")
+  val swaggerUIEndpoints = SwaggerInterpreter().fromEndpoints[Task](serviceEndpoints.map(_.endpoint), "Mateusz's Recruitment Task", "1.0")
     .map(_.widen[SchemasStorage])
 
   val api = ZioHttpInterpreter().toHttp(serviceEndpoints ++ swaggerUIEndpoints)

@@ -7,7 +7,7 @@ val tapirVersion = "1.1.2"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "snowplow-task",
+    name := "some-recruitment-task",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-json-schema" % "0.2.0" exclude("com.github.everit-org.json-schema", "org.everit.json.schema"),
       "com.github.erosb" % "everit-json-schema" % "1.14.1",
