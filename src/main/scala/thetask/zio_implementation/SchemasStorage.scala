@@ -1,4 +1,5 @@
 package thetask
+package zio_implementation
 
 import better.files.File
 import cats.syntax.either._
@@ -7,19 +8,10 @@ import io.circe.generic.semiauto.deriveCodec
 import io.circe.parser.decode
 import io.circe.syntax.EncoderOps
 import io.circe.{Codec, Printer}
-import thetask.FileBasedStorage.hashSchemaID
+import thetask.SchemaIdToMd5.hashSchemaID
 import zio.{IO, Ref, ZIO, ZLayer}
 
-import java.math.BigInteger
-import java.security.MessageDigest
-
-trait SchemasStorageError
-
-case class SchemaAlreadyExists(schemaId: SchemaId) extends SchemasStorageError
-
-case class CantReadSchemaFromStorage(schemaId: SchemaId, error: String) extends SchemasStorageError
-
-case class CantStoreSchema(schemaId: SchemaId, error: String) extends SchemasStorageError
+import scala.util.Try
 
 trait SchemasStorage {
   def get(schemaId: SchemaId): IO[SchemasStorageError, Option[JsonSchema]]
@@ -61,20 +53,11 @@ class InMemSchemasStorage(
   }
 }
 
-object FileBasedStorage {
-  def hashSchemaID(schemaId: SchemaId) = ZIO.fromEither(Either.catchNonFatal {
-    val hasher = MessageDigest.getInstance("MD5")
-    hasher.update(schemaId.value.getBytes)
-    val bigInt = new BigInteger(1, hasher.digest())
-    bigInt.toString(16).toUpperCase
-  })
-}
-
 class FileBasedStorage(parentDir: File) extends SchemasStorage {
   implicit val jsonSchemaCodec: Codec[JsonSchema] = deriveCodec
 
   def fileOfASchema(schemaId: SchemaId) =
-    hashSchemaID(schemaId).map(_ + ".json").map(parentDir./)
+    ZIO.fromEither(hashSchemaID(schemaId)).map(_ + ".json").flatMap(fileName => ZIO.fromTry(Try(parentDir / fileName)))
 
   override def get(schemaId: SchemaId) = {
     fileOfASchema(schemaId)

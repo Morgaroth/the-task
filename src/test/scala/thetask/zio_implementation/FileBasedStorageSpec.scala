@@ -1,4 +1,5 @@
 package thetask
+package zio_implementation
 
 import better.files.File
 import cats.syntax.either._
@@ -18,18 +19,6 @@ object FileBasedStorageSpec extends ZIOSpecDefault {
   val jsonSchema2 = JsonSchema(SchemaId("schema2"), """ {"some-key": "another-value"}""")
 
   lazy val spec = suite("FileBasedStorage")(
-    test("should generate hash as the author expects") {
-      for {
-        hash <- FileBasedStorage.hashSchemaID(SchemaId("should generate hash as the author expects"))
-      } yield assert(hash)(equalTo("96718B5616499A7E0249E5061361A1F4"))
-    },
-
-    test("should generate hash as the author expects 2") {
-      for {
-        hash <- FileBasedStorage.hashSchemaID(SchemaId("config-schema"))
-      } yield assert(hash)(equalTo("22E5A544608E1303DB8E7AA4D96608FF"))
-    },
-
     test("should store files") {
       for {
         tmpDir <- ZIO.service[File]
